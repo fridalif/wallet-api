@@ -18,21 +18,21 @@ type WalletHandlerI interface {
 	UpdateBalance(ctx *gin.Context)
 }
 
-type walletHandler struct {
+type WalletHandler struct {
 	WalletService services.WalletServiceI
 }
 
 func NewWalletHandler(walletService services.WalletServiceI) WalletHandlerI {
-	return &walletHandler{
+	return &WalletHandler{
 		WalletService: walletService,
 	}
 }
 
-func (walletHandler *walletHandler) RegisterRoutes(router *gin.RouterGroup) {
-	router.POST("/wallet", walletHandler.UpdateBalance)
-	router.GET("/wallets/:id", walletHandler.UpdateBalance)
+func (WalletHandler *WalletHandler) RegisterRoutes(router *gin.RouterGroup) {
+	router.POST("/wallet", WalletHandler.UpdateBalance)
+	router.GET("/wallets/:id", WalletHandler.UpdateBalance)
 }
-func (walletHandler *walletHandler) GetBalance(ctx *gin.Context) {
+func (WalletHandler *WalletHandler) GetBalance(ctx *gin.Context) {
 	idStr := ctx.Param("id")
 	id, err := uuid.Parse(idStr)
 	if err != nil {
@@ -43,7 +43,7 @@ func (walletHandler *walletHandler) GetBalance(ctx *gin.Context) {
 		})
 		return
 	}
-	balance, err := walletHandler.WalletService.GetBalance(id)
+	balance, err := WalletHandler.WalletService.GetBalance(id)
 	if err == pgx.ErrNoRows {
 		ctx.AbortWithStatusJSON(http.StatusOK, gin.H{
 			"status": http.StatusNotFound,
@@ -73,7 +73,7 @@ func (walletHandler *walletHandler) GetBalance(ctx *gin.Context) {
 	})
 }
 
-func (walletHandler *walletHandler) UpdateBalance(ctx *gin.Context) {
+func (WalletHandler *WalletHandler) UpdateBalance(ctx *gin.Context) {
 	var userRequest requests.UpdateBalanceRequest
 	err := ctx.ShouldBindJSON(&userRequest)
 	if err != nil {
@@ -84,7 +84,7 @@ func (walletHandler *walletHandler) UpdateBalance(ctx *gin.Context) {
 		})
 		return
 	}
-	err = walletHandler.WalletService.UpdateBalance(userRequest.WalletId, userRequest.OperationType, userRequest.Amount)
+	err = WalletHandler.WalletService.UpdateBalance(userRequest.WalletId, userRequest.OperationType, userRequest.Amount)
 	if err == customerror.ErrWrongAmount {
 		ctx.AbortWithStatusJSON(http.StatusOK, gin.H{
 			"status": http.StatusBadRequest,

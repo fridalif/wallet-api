@@ -21,7 +21,7 @@ type WalletRepositoryI interface {
 	ClosePull()
 }
 
-type walletRepository struct {
+type WalletRepository struct {
 	Pool *pgxpool.Pool
 	Host string
 	Port string
@@ -31,7 +31,7 @@ func NewWalletRepository(appConfig *config.Config) (WalletRepositoryI, error) {
 	connStr := fmt.Sprintf("postgres://%s:%s@%s:%s/%s", appConfig.DbUser, appConfig.DbPassword, appConfig.DbHost, appConfig.DbPort, appConfig.DbName)
 	config, err := pgxpool.ParseConfig(connStr)
 	if err != nil {
-		return &walletRepository{}, customerror.NewError("NewWalletRepository", appConfig.WebHost+":"+appConfig.WebPort, err.Error())
+		return &WalletRepository{}, customerror.NewError("NewWalletRepository", appConfig.WebHost+":"+appConfig.WebPort, err.Error())
 	}
 	config.MaxConns = 100
 	config.MinConns = 10
@@ -39,21 +39,21 @@ func NewWalletRepository(appConfig *config.Config) (WalletRepositoryI, error) {
 	config.MaxConnIdleTime = 15 * time.Minute
 	pool, err := pgxpool.NewWithConfig(context.Background(), config)
 	if err != nil {
-		return &walletRepository{}, customerror.NewError("NewWalletRepository", appConfig.WebHost+":"+appConfig.WebPort, err.Error())
+		return &WalletRepository{}, customerror.NewError("NewWalletRepository", appConfig.WebHost+":"+appConfig.WebPort, err.Error())
 	}
 
 	if err := pool.Ping(context.Background()); err != nil {
 		pool.Close()
-		return &walletRepository{}, customerror.NewError("NewWalletRepository", appConfig.WebHost+":"+appConfig.WebPort, err.Error())
+		return &WalletRepository{}, customerror.NewError("NewWalletRepository", appConfig.WebHost+":"+appConfig.WebPort, err.Error())
 	}
-	return &walletRepository{
+	return &WalletRepository{
 		Pool: pool,
 		Host: appConfig.WebHost,
 		Port: appConfig.WebPort,
 	}, nil
 }
 
-func (walletRepo *walletRepository) CreateTables(ctx context.Context) error {
+func (walletRepo *WalletRepository) CreateTables(ctx context.Context) error {
 	createTableQuery := `
 	CREATE TABLE IF NOT EXISTS wallet (
 		id UUID PRIMARY KEY,
@@ -71,7 +71,7 @@ func (walletRepo *walletRepository) CreateTables(ctx context.Context) error {
 	return nil
 }
 
-func (walletRepo *walletRepository) GetWallet(ctx context.Context, id uuid.UUID) (*wallet.Wallet, error) {
+func (walletRepo *WalletRepository) GetWallet(ctx context.Context, id uuid.UUID) (*wallet.Wallet, error) {
 	var wallet wallet.Wallet
 	selectQuery := "SELECT id, amount FROM wallet WHERE id = $1"
 	err := walletRepo.Pool.QueryRow(ctx, selectQuery, id).Scan(&wallet.ID, &wallet.Amount)
@@ -84,7 +84,7 @@ func (walletRepo *walletRepository) GetWallet(ctx context.Context, id uuid.UUID)
 	return nil, customerror.NewError("walletRepo.GetWallet", walletRepo.Host+":"+walletRepo.Port, err.Error())
 }
 
-func (walletRepo *walletRepository) UpdateWallet(ctx context.Context, id uuid.UUID, delta int64) error {
+func (walletRepo *WalletRepository) UpdateWallet(ctx context.Context, id uuid.UUID, delta int64) error {
 	updateQuery := "UPDATE wallet set amount = amount + $1 WHERE id = $2"
 	command, err := walletRepo.Pool.Exec(ctx, updateQuery, delta, id)
 	if err != nil {
@@ -101,6 +101,6 @@ func (walletRepo *walletRepository) UpdateWallet(ctx context.Context, id uuid.UU
 	return nil
 }
 
-func (walletRepo *walletRepository) ClosePull() {
+func (walletRepo *WalletRepository) ClosePull() {
 	walletRepo.Pool.Close()
 }
