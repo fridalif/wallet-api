@@ -9,8 +9,8 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
-	"golang.org/x/net/context"
 )
 
 type WalletRepositoryI interface {
@@ -69,7 +69,16 @@ func (walletRepo walletRepository) CreateTables(ctx context.Context) error {
 }
 
 func (walletRepo walletRepository) GetWallet(id uuid.UUID, ctx context.Context) (*wallet.Wallet, error) {
-
+	var wallet wallet.Wallet
+	selectQuery := "SELECT id, amount FROM wallet WHERE id = $1"
+	err := walletRepo.Pool.QueryRow(ctx, selectQuery, id).Scan(&wallet.ID, &wallet.Amount)
+	if err == nil {
+		return &wallet, nil
+	}
+	if err == pgx.ErrNoRows {
+		return nil, err
+	}
+	return nil, customerror.NewError("walletRepo.GetWallet", walletRepo.Host+":"+walletRepo.Port, err.Error())
 }
 
 func (walletRepo walletRepository) UpdateWallet(ctx context.Context) error {
