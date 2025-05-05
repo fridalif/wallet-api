@@ -10,6 +10,8 @@ type CustomError struct {
 
 var ErrWrongAmount = fmt.Errorf("wrong amount")
 
+var ErrWrongOperation = fmt.Errorf("wrong operation")
+
 func (customError CustomError) Error() string {
 	return fmt.Sprintf("ERROR|%s|%s:%s", customError.Endpoint, customError.Module, customError.Message)
 }

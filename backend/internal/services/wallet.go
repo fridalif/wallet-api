@@ -3,7 +3,6 @@ package services
 import (
 	"backend/internal/repos"
 	"backend/pkg/customerror"
-	"backend/pkg/wallet"
 	"context"
 	"time"
 
@@ -41,10 +40,16 @@ func (walletService walletService) GetBalance(id uuid.UUID) (int64, error) {
 	return 0, customError
 }
 func (walletService walletService) UpdateBalance(id uuid.UUID, operationType string, amount int64) error {
+	if operationType != "DEPOSIT" && operationType != "WITHDRAW" {
+		return customerror.ErrWrongOperation
+	}
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
-	wallet := wallet.Wallet{
-		ID: id,
-		Amount: ,
+	err := walletService.Repo.UpdateWallet(ctx, id, amount)
+	if err == nil || err == customerror.ErrWrongAmount {
+		return err
 	}
+	customError := err.(customerror.CustomError)
+	customError.AppendModule("UpdateBalance")
+	return customError
 }
