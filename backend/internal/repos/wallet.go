@@ -4,6 +4,7 @@ import (
 	"backend/pkg/config"
 	"backend/pkg/customerror"
 	"backend/pkg/wallet"
+	"context"
 	"fmt"
 	"time"
 
@@ -13,13 +14,15 @@ import (
 )
 
 type WalletRepositoryI interface {
-	CreateTables() error
-	GetWallet(id uuid.UUID) (*wallet.Wallet, error)
-	UpdateWallet() error
+	CreateTables(ctx context.Context) error
+	GetWallet(id uuid.UUID, ctx context.Context) (*wallet.Wallet, error)
+	UpdateWallet(ctx context.Context) error
 }
 
 type walletRepository struct {
 	Pool *pgxpool.Pool
+	Host string
+	Port string
 }
 
 func NewWalletRepository(appConfig *config.Config) (WalletRepositoryI, error) {
@@ -42,17 +45,33 @@ func NewWalletRepository(appConfig *config.Config) (WalletRepositoryI, error) {
 	}
 	return &walletRepository{
 		Pool: pool,
+		Host: appConfig.WebHost,
+		Port: appConfig.WebPort,
 	}, nil
 }
 
-func (walletRepo walletRepository) CreateTables() error {
+func (walletRepo walletRepository) CreateTables(ctx context.Context) error {
+	createTableQuery := `
+	CREATE TABLE IF NOT EXISTS wallet (
+		id UUID PRIMARY KEY,
+		amount BIGINT,
+	);`
+	_, err := walletRepo.Pool.Exec(ctx, createTableQuery)
+	if err != nil {
+		return customerror.NewError("walletRepo.CreateTables", walletRepo.Host+":"+walletRepo.Port, err.Error())
+	}
+	createIndexQuery := `CREATE INDEX IF NOT EXISTS wallet_id_idx ON wallet(id);`
+	_, err = walletRepo.Pool.Exec(ctx, createIndexQuery)
+	if err != nil {
+		return customerror.NewError("walletRepo.CreateTables", walletRepo.Host+":"+walletRepo.Port, err.Error())
+	}
+	return nil
+}
+
+func (walletRepo walletRepository) GetWallet(id uuid.UUID, ctx context.Context) (*wallet.Wallet, error) {
 
 }
 
-func (walletRepo walletRepository) GetWallet(id uuid.UUID) (*wallet.Wallet, error) {
-
-}
-
-func (walletRepo walletRepository) UpdateWallet() error {
+func (walletRepo walletRepository) UpdateWallet(ctx context.Context) error {
 
 }
