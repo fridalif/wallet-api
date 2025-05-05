@@ -8,6 +8,8 @@ type CustomError struct {
 	Message  string
 }
 
+var ErrWrongAmount = fmt.Errorf("wrong amount")
+
 func (customError CustomError) Error() string {
 	return fmt.Sprintf("ERROR|%s|%s:%s", customError.Endpoint, customError.Module, customError.Message)
 }

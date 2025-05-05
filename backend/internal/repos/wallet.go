@@ -10,6 +10,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -83,9 +84,17 @@ func (walletRepo walletRepository) GetWallet(ctx context.Context, id uuid.UUID) 
 
 func (walletRepo walletRepository) UpdateWallet(ctx context.Context, wallet wallet.Wallet) error {
 	updateQuery := "UPDATE wallet set amount = $1 WHERE id = $2"
-	_, err := walletRepo.Pool.Exec(ctx, updateQuery, wallet.Amount, wallet.ID)
+	command, err := walletRepo.Pool.Exec(ctx, updateQuery, wallet.Amount, wallet.ID)
 	if err != nil {
+		if pgErr, ok := err.(*pgconn.PgError); ok {
+			if pgErr.Code == "23514" {
+				return customerror.ErrWrongAmount
+			}
+		}
 		return customerror.NewError("walletRepo.UpdateWallet", walletRepo.Host+":"+walletRepo.Port, err.Error())
+	}
+	if command.RowsAffected() == 0 {
+		return pgx.ErrNoRows
 	}
 	return nil
 }
