@@ -6,21 +6,23 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/jackc/pgx"
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/stretchr/testify/mock"
+
+	"github.com/stretchr/testify/assert"
 )
 
 type MockPool struct {
 	mock.Mock
 }
 
-func (m *MockPool) Exec(ctx context.Context, sql string, args ...any) (pgconn.CommandTag, error) {
+func (m *MockPool) Exec(ctx context.Context, sql string, args ...interface{}) (pgconn.CommandTag, error) {
 	mockArgs := m.Called(ctx, sql, args)
 	return mockArgs.Get(0).(pgconn.CommandTag), mockArgs.Error(1)
 }
 
-func (m *MockPool) QueryRow(ctx context.Context, sql string, args ...any) pgx.Row {
+func (m *MockPool) QueryRow(ctx context.Context, sql string, args ...interface{}) pgx.Row {
 	mockArgs := m.Called(ctx, sql, args)
 	return mockArgs.Get(0).(pgx.Row)
 }
@@ -78,6 +80,13 @@ func TestWalletRepository_CreateTables(t *testing.T) {
 				Host: "localhost",
 				Port: "80",
 			}
+			err := repo.CreateTables(context.Background())
+			if test.WantErr {
+				assert.Error(t, err)
+			} else {
+				assert.NoError(t, err)
+			}
+			mockPool.AssertExpectations(t)
 		})
 	}
 }
