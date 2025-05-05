@@ -48,6 +48,7 @@ func NewWalletRepository(appConfig *config.Config) (WalletRepositoryI, error) {
 func (walletRepo walletRepository) CreateTables() error {
 
 }
+
 func (walletRepo walletRepository) GetWallet(id uuid.UUID) (*wallet.Wallet, error) {
 
 }
