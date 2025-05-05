@@ -17,7 +17,7 @@ import (
 type WalletRepositoryI interface {
 	CreateTables(ctx context.Context) error
 	GetWallet(ctx context.Context, id uuid.UUID) (*wallet.Wallet, error)
-	UpdateWallet(ctx context.Context, wallet wallet.Wallet) error
+	UpdateWallet(ctx context.Context, id uuid.UUID, delta int64) error
 }
 
 type walletRepository struct {
@@ -82,9 +82,9 @@ func (walletRepo walletRepository) GetWallet(ctx context.Context, id uuid.UUID) 
 	return nil, customerror.NewError("walletRepo.GetWallet", walletRepo.Host+":"+walletRepo.Port, err.Error())
 }
 
-func (walletRepo walletRepository) UpdateWallet(ctx context.Context, wallet wallet.Wallet) error {
-	updateQuery := "UPDATE wallet set amount = $1 WHERE id = $2"
-	command, err := walletRepo.Pool.Exec(ctx, updateQuery, wallet.Amount, wallet.ID)
+func (walletRepo walletRepository) UpdateWallet(ctx context.Context, id uuid.UUID, delta int64) error {
+	updateQuery := "UPDATE wallet set amount = amount + $1 WHERE id = $2"
+	command, err := walletRepo.Pool.Exec(ctx, updateQuery, delta, id)
 	if err != nil {
 		if pgErr, ok := err.(*pgconn.PgError); ok {
 			if pgErr.Code == "23514" {
