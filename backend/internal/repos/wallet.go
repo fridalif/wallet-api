@@ -15,8 +15,8 @@ import (
 
 type WalletRepositoryI interface {
 	CreateTables(ctx context.Context) error
-	GetWallet(id uuid.UUID, ctx context.Context) (*wallet.Wallet, error)
-	UpdateWallet(ctx context.Context) error
+	GetWallet(ctx context.Context, id uuid.UUID) (*wallet.Wallet, error)
+	UpdateWallet(ctx context.Context, wallet wallet.Wallet) error
 }
 
 type walletRepository struct {
@@ -54,7 +54,7 @@ func (walletRepo walletRepository) CreateTables(ctx context.Context) error {
 	createTableQuery := `
 	CREATE TABLE IF NOT EXISTS wallet (
 		id UUID PRIMARY KEY,
-		amount BIGINT,
+		amount BIGINT NOT NULL DEFAULT 0 CHECK (amount >= 0),
 	);`
 	_, err := walletRepo.Pool.Exec(ctx, createTableQuery)
 	if err != nil {
@@ -68,7 +68,7 @@ func (walletRepo walletRepository) CreateTables(ctx context.Context) error {
 	return nil
 }
 
-func (walletRepo walletRepository) GetWallet(id uuid.UUID, ctx context.Context) (*wallet.Wallet, error) {
+func (walletRepo walletRepository) GetWallet(ctx context.Context, id uuid.UUID) (*wallet.Wallet, error) {
 	var wallet wallet.Wallet
 	selectQuery := "SELECT id, amount FROM wallet WHERE id = $1"
 	err := walletRepo.Pool.QueryRow(ctx, selectQuery, id).Scan(&wallet.ID, &wallet.Amount)
@@ -81,6 +81,11 @@ func (walletRepo walletRepository) GetWallet(id uuid.UUID, ctx context.Context) 
 	return nil, customerror.NewError("walletRepo.GetWallet", walletRepo.Host+":"+walletRepo.Port, err.Error())
 }
 
-func (walletRepo walletRepository) UpdateWallet(ctx context.Context) error {
-
+func (walletRepo walletRepository) UpdateWallet(ctx context.Context, wallet wallet.Wallet) error {
+	updateQuery := "UPDATE wallet set amount = $1 WHERE id = $2"
+	_, err := walletRepo.Pool.Exec(ctx, updateQuery, wallet.Amount, wallet.ID)
+	if err != nil {
+		return customerror.NewError("walletRepo.UpdateWallet", walletRepo.Host+":"+walletRepo.Port, err.Error())
+	}
+	return nil
 }
