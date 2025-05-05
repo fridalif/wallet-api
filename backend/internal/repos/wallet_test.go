@@ -1,6 +1,7 @@
 package repos_test
 
 import (
+	"backend/internal/repos"
 	"context"
 	"errors"
 	"testing"
@@ -72,7 +73,11 @@ func TestWalletRepository_CreateTables(t *testing.T) {
 		t.Run(test.Name, func(t *testing.T) {
 			mockPool := new(MockPool)
 			test.Mock(mockPool)
-			repo := &repos.wallet
+			repo := &repos.WalletRepository{
+				Pool: mockPool,
+				Host: "localhost",
+				Port: "80",
+			}
 		})
 	}
 }

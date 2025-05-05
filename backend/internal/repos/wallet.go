@@ -21,8 +21,14 @@ type WalletRepositoryI interface {
 	ClosePull()
 }
 
+type PoolInterface interface {
+	Exec(ctx context.Context, sql string, arguments ...interface{}) (pgconn.CommandTag, error)
+	QueryRow(ctx context.Context, sql string, args ...interface{}) pgx.Row
+	Close()
+}
+
 type WalletRepository struct {
-	Pool *pgxpool.Pool
+	Pool PoolInterface
 	Host string
 	Port string
 }
