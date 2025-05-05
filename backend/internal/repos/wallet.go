@@ -1,6 +1,7 @@
 package repos
 
 import (
+	"backend/pkg/config"
 	"backend/pkg/customerror"
 	"backend/pkg/wallet"
 
@@ -9,11 +10,16 @@ import (
 )
 
 type WalletRepositoryI interface {
-	InitTable()
+	InitConnection()
+	CreateTables()
 	GetWallet(id uuid.UUID) (*wallet.Wallet, *customerror.CustomError)
 	UpdateWallet() *customerror.CustomError
 }
 
 type walletRepository struct {
 	Pool *pgxpool.Pool
+}
+
+func NewWalletRepository(appConfig *config.Config) (WalletRepositoryI, error) {
+
 }
