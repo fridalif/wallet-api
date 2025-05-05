@@ -43,6 +43,7 @@ func NewWalletRepository(appConfig *config.Config) (WalletRepositoryI, error) {
 	}
 
 	if err := pool.Ping(context.Background()); err != nil {
+		pool.Close()
 		return &walletRepository{}, customerror.NewError("NewWalletRepository", appConfig.WebHost+":"+appConfig.WebPort, err.Error())
 	}
 	return &walletRepository{
