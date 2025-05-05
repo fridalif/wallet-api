@@ -25,7 +25,7 @@ func NewWalletService(repo repos.WalletRepositoryI) WalletServiceI {
 	}
 }
 
-func (walletService walletService) GetBalance(id uuid.UUID) (int64, error) {
+func (walletService *walletService) GetBalance(id uuid.UUID) (int64, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	wallet, err := walletService.Repo.GetWallet(ctx, id)
@@ -39,7 +39,7 @@ func (walletService walletService) GetBalance(id uuid.UUID) (int64, error) {
 	customError.AppendModule("GetBalance")
 	return 0, customError
 }
-func (walletService walletService) UpdateBalance(id uuid.UUID, operationType string, amount int64) error {
+func (walletService *walletService) UpdateBalance(id uuid.UUID, operationType string, amount int64) error {
 	if operationType != "DEPOSIT" && operationType != "WITHDRAW" {
 		return customerror.ErrWrongOperation
 	}

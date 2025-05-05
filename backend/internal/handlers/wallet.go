@@ -23,16 +23,16 @@ type walletHandler struct {
 }
 
 func NewWalletHandler(walletService services.WalletServiceI) WalletHandlerI {
-	return walletHandler{
+	return &walletHandler{
 		WalletService: walletService,
 	}
 }
 
-func (walletHandler walletHandler) RegisterRoutes(router *gin.RouterGroup) {
+func (walletHandler *walletHandler) RegisterRoutes(router *gin.RouterGroup) {
 	router.POST("/wallet", walletHandler.UpdateBalance)
 	router.GET("/wallets/:id", walletHandler.UpdateBalance)
 }
-func (walletHandler walletHandler) GetBalance(ctx *gin.Context) {
+func (walletHandler *walletHandler) GetBalance(ctx *gin.Context) {
 	idStr := ctx.Param("id")
 	id, err := uuid.Parse(idStr)
 	if err != nil {
@@ -73,7 +73,7 @@ func (walletHandler walletHandler) GetBalance(ctx *gin.Context) {
 	})
 }
 
-func (walletHandler walletHandler) UpdateBalance(ctx *gin.Context) {
+func (walletHandler *walletHandler) UpdateBalance(ctx *gin.Context) {
 	var userRequest requests.UpdateBalanceRequest
 	err := ctx.ShouldBindJSON(&userRequest)
 	if err != nil {

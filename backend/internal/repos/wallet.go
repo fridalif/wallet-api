@@ -18,6 +18,7 @@ type WalletRepositoryI interface {
 	CreateTables(ctx context.Context) error
 	GetWallet(ctx context.Context, id uuid.UUID) (*wallet.Wallet, error)
 	UpdateWallet(ctx context.Context, id uuid.UUID, delta int64) error
+	ClosePull()
 }
 
 type walletRepository struct {
@@ -51,7 +52,7 @@ func NewWalletRepository(appConfig *config.Config) (WalletRepositoryI, error) {
 	}, nil
 }
 
-func (walletRepo walletRepository) CreateTables(ctx context.Context) error {
+func (walletRepo *walletRepository) CreateTables(ctx context.Context) error {
 	createTableQuery := `
 	CREATE TABLE IF NOT EXISTS wallet (
 		id UUID PRIMARY KEY,
@@ -69,7 +70,7 @@ func (walletRepo walletRepository) CreateTables(ctx context.Context) error {
 	return nil
 }
 
-func (walletRepo walletRepository) GetWallet(ctx context.Context, id uuid.UUID) (*wallet.Wallet, error) {
+func (walletRepo *walletRepository) GetWallet(ctx context.Context, id uuid.UUID) (*wallet.Wallet, error) {
 	var wallet wallet.Wallet
 	selectQuery := "SELECT id, amount FROM wallet WHERE id = $1"
 	err := walletRepo.Pool.QueryRow(ctx, selectQuery, id).Scan(&wallet.ID, &wallet.Amount)
@@ -82,7 +83,7 @@ func (walletRepo walletRepository) GetWallet(ctx context.Context, id uuid.UUID) 
 	return nil, customerror.NewError("walletRepo.GetWallet", walletRepo.Host+":"+walletRepo.Port, err.Error())
 }
 
-func (walletRepo walletRepository) UpdateWallet(ctx context.Context, id uuid.UUID, delta int64) error {
+func (walletRepo *walletRepository) UpdateWallet(ctx context.Context, id uuid.UUID, delta int64) error {
 	updateQuery := "UPDATE wallet set amount = amount + $1 WHERE id = $2"
 	command, err := walletRepo.Pool.Exec(ctx, updateQuery, delta, id)
 	if err != nil {
@@ -97,4 +98,8 @@ func (walletRepo walletRepository) UpdateWallet(ctx context.Context, id uuid.UUI
 		return pgx.ErrNoRows
 	}
 	return nil
+}
+
+func (walletRepo *walletRepository) ClosePull() {
+	walletRepo.Pool.Close()
 }
