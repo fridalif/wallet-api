@@ -1,6 +1,7 @@
 package repos
 
 import (
+	"backend/pkg/customerror"
 	"backend/pkg/wallet"
 
 	"github.com/google/uuid"
@@ -8,6 +9,6 @@ import (
 
 type WalletRepositoryI interface {
 	InitTable()
-	GetWallet(id uuid.UUID) (*wallet.Wallet
-	UpdateWallet()
+	GetWallet(id uuid.UUID) (*wallet.Wallet, *customerror.CustomError)
+	UpdateWallet() *customerror.CustomError
 }
