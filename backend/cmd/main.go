@@ -34,5 +34,5 @@ func main() {
 	v1 := api.Group("/v1")
 	walletHandlers.RegisterRoutes(v1)
 
-	router.Run(fmt.Sprint("%s:%s", config.WebHost, config.WebPort))
+	router.Run(fmt.Sprintf("%s:%s", config.WebHost, config.WebPort))
 }
