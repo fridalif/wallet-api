@@ -123,14 +123,14 @@ func TestWalletService_UpdateBalance(t *testing.T) {
 			Name:          "Success Withdraw Test",
 			WalletId:      testID,
 			OperationType: "WITHDRAW",
-			Amount:        -100,
+			Amount:        100,
 			Mock: func(r *MockRepository) {
 				r.On("UpdateWallet", mock.Anything, testID, int64(-100)).Return(nil)
 			},
 			WaitingError: nil,
 		},
 		{
-			Name:          "wrong operation",
+			Name:          "Wrong Operation Test",
 			WalletId:      testID,
 			OperationType: "INVALID",
 			Amount:        100,
@@ -138,17 +138,17 @@ func TestWalletService_UpdateBalance(t *testing.T) {
 			WaitingError:  customerror.ErrWrongOperation,
 		},
 		{
-			Name:          "wrong amount",
+			Name:          "Wrong Amount Test",
 			WalletId:      testID,
 			OperationType: "WITHDRAW",
 			Amount:        100,
 			Mock: func(r *MockRepository) {
-				r.On("UpdateWallet", mock.Anything, testID, int64(-1000)).Return(customerror.ErrWrongAmount)
+				r.On("UpdateWallet", mock.Anything, testID, int64(-100)).Return(customerror.ErrWrongAmount)
 			},
 			WaitingError: customerror.ErrWrongAmount,
 		},
 		{
-			Name:          "not found",
+			Name:          "Not Found Test",
 			WalletId:      testID,
 			OperationType: "DEPOSIT",
 			Amount:        100,
@@ -158,7 +158,7 @@ func TestWalletService_UpdateBalance(t *testing.T) {
 			WaitingError: pgx.ErrNoRows,
 		},
 		{
-			Name:          "other error",
+			Name:          "Other Error Test",
 			WalletId:      testID,
 			OperationType: "DEPOSIT",
 			Amount:        100,

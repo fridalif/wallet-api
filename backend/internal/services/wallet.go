@@ -50,7 +50,7 @@ func (WalletService *WalletService) UpdateBalance(id uuid.UUID, operationType st
 	defer cancel()
 
 	err := WalletService.Repo.UpdateWallet(ctx, id, amount)
-	if err == nil || err == customerror.ErrWrongAmount {
+	if err == nil || err == customerror.ErrWrongAmount || err == pgx.ErrNoRows {
 		return err
 	}
 	customError := err.(customerror.CustomError)
