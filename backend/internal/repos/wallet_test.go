@@ -170,3 +170,92 @@ func TestWalletRepository_GetWallet(t *testing.T) {
 		})
 	}
 }
+
+/*
+		func (walletRepo *WalletRepository) UpdateWallet(ctx context.Context, id uuid.UUID, delta int64) error {
+		updateQuery := "UPDATE wallet set amount = amount + $1 WHERE id = $2"
+		command, err := walletRepo.Pool.Exec(ctx, updateQuery, delta, id)
+		if err != nil {
+			if pgErr, ok := err.(*pgconn.PgError); ok {
+				if pgErr.Code == "23514" {
+					return customerror.ErrWrongAmount
+				}
+			}
+			return customerror.NewError("walletRepo.UpdateWallet", walletRepo.Host+":"+walletRepo.Port, err.Error())
+		}
+		if command.RowsAffected() == 0 {
+			return pgx.ErrNoRows
+		}
+		return nil
+	}
+*/
+type UpdateWalletTest struct {
+	Name         string
+	WalletId     uuid.UUID
+	Delta        int64
+	Mock         func(*MockPool)
+	WaitingError error
+}
+
+func TestWalletRepository_UpdateWallet(t *testing.T) {
+	testUUID := uuid.New()
+	testDelta := int64(100)
+	updateWalletTests := []UpdateWalletTest{
+		{
+			Name:         "Success Test",
+			WalletId:     testUUID,
+			WaitingError: nil,
+			Delta:        testDelta,
+			Mock: func(p *MockPool) {
+				p.On("Exec", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(pgconn.NewCommandTag("UPDATE 1"), nil)
+			},
+		},
+		{
+			Name:         "Not Found Test",
+			WalletId:     testUUID,
+			Delta:        testDelta,
+			WaitingError: pgx.ErrNoRows,
+			Mock: func(p *MockPool) {
+				p.On("Exec", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(pgconn.NewCommandTag("UPDATE 0"), nil)
+			},
+		},
+		{
+			Name:     "Wrong Amount Test",
+			WalletId: testUUID,
+			Delta:    testDelta,
+			Mock: func(p *MockPool) {
+				p.On("Exec", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(pgconn.CommandTag{}, &pgconn.PgError{Code: "23514"})
+			},
+			WaitingError: customerror.ErrWrongAmount,
+		},
+		{
+			Name:     "other error",
+			WalletId: testUUID,
+			Delta:    testDelta,
+			Mock: func(p *MockPool) {
+				p.On("Exec", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(pgconn.CommandTag{}, errors.New("error"))
+			},
+			WaitingError: customerror.NewError("walletRepo.UpdateWallet", "127.0.0.1:8080", "error"),
+		},
+	}
+	for _, test := range updateWalletTests {
+		t.Run(test.Name, func(t *testing.T) {
+			mockPool := new(MockPool)
+			test.Mock(mockPool)
+
+			repo := &repos.WalletRepository{
+				Pool: mockPool,
+				Host: "127.0.0.1",
+				Port: "8080",
+			}
+
+			err := repo.UpdateWallet(context.Background(), test.WalletId, test.Delta)
+			if test.WaitingError != nil {
+				assert.EqualError(t, err, test.WaitingError.Error())
+			} else {
+				assert.NoError(t, err)
+			}
+			mockPool.AssertExpectations(t)
+		})
+	}
+}
