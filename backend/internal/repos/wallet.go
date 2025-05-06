@@ -63,7 +63,7 @@ func (walletRepo *WalletRepository) CreateTables(ctx context.Context) error {
 	createTableQuery := `
 	CREATE TABLE IF NOT EXISTS wallet (
 		id UUID PRIMARY KEY,
-		amount BIGINT NOT NULL DEFAULT 0 CHECK (amount >= 0),
+		amount BIGINT NOT NULL DEFAULT 0 CHECK (amount >= 0)
 	);`
 	_, err := walletRepo.Pool.Exec(ctx, createTableQuery)
 	if err != nil {
