@@ -8,6 +8,8 @@ services:
     platform: linux/amd64
     ports:
       - "80:80"
+    volumes:
+      - ./critical.log:/app/critical.log 
     networks:
       - app-network
     depends_on:
