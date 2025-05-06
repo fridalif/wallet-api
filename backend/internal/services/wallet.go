@@ -43,8 +43,12 @@ func (WalletService *WalletService) UpdateBalance(id uuid.UUID, operationType st
 	if operationType != "DEPOSIT" && operationType != "WITHDRAW" {
 		return customerror.ErrWrongOperation
 	}
+	if operationType == "WITHDRAW" {
+		amount = -amount
+	}
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
+
 	err := WalletService.Repo.UpdateWallet(ctx, id, amount)
 	if err == nil || err == customerror.ErrWrongAmount {
 		return err
