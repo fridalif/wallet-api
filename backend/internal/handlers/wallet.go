@@ -30,7 +30,7 @@ func NewWalletHandler(walletService services.WalletServiceI) WalletHandlerI {
 
 func (WalletHandler *WalletHandler) RegisterRoutes(router *gin.RouterGroup) {
 	router.POST("/wallet", WalletHandler.UpdateBalance)
-	router.GET("/wallets/:id", WalletHandler.UpdateBalance)
+	router.GET("/wallets/:id", WalletHandler.GetBalance)
 }
 func (WalletHandler *WalletHandler) GetBalance(ctx *gin.Context) {
 	idStr := ctx.Param("id")
